@@ -23,7 +23,7 @@ class Brand
     /**
      * @var Collection<int, Car>
      */
-    #[ORM\OneToMany(targetEntity: Car::class, mappedBy: 'brandID')]
+    #[ORM\OneToMany(targetEntity: Car::class, mappedBy: 'brand')]
     private Collection $cars;
 
     public function __construct()
@@ -67,7 +67,7 @@ class Brand
     {
         if (!$this->cars->contains($car)) {
             $this->cars->add($car);
-            $car->setBrandID($this);
+            $car->setBrand($this);
         }
 
         return $this;
@@ -77,8 +77,8 @@ class Brand
     {
         if ($this->cars->removeElement($car)) {
             // set the owning side to null (unless already changed)
-            if ($car->getBrandID() === $this) {
-                $car->setBrandID(null);
+            if ($car->getBrand() === $this) {
+                $car->setBrand(null);
             }
         }
 

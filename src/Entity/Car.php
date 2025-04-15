@@ -4,7 +4,10 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 use App\Repository\CarRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: CarRepository::class)]
 #[ApiResource]
@@ -21,13 +24,25 @@ class Car
     #[ORM\Column(nullable: true)]
     private ?int $price = null;
 
-    #[ORM\ManyToOne(inversedBy: 'cars')]
+    #[ORM\ManyToOne(targetEntity: Brand::class, inversedBy: 'cars')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Brand $brandID = null;
+    #[Groups(['brand:list'])]
+    private ?Brand $brand = null;
 
-    #[ORM\ManyToOne(inversedBy: 'cars')]
+    #[ORM\ManyToOne(targetEntity: Model::class, inversedBy: 'cars')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Model $modelID = null;
+    private ?Model $model = null;
+
+    /**
+     * @var Collection<int, Request>
+     */
+    #[ORM\OneToMany(targetEntity: Request::class, mappedBy: 'car')]
+    private Collection $requests;
+
+    public function __construct()
+    {
+        $this->requests = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -58,26 +73,56 @@ class Car
         return $this;
     }
 
-    public function getBrandID(): ?Brand
+    public function getBrand(): ?Brand
     {
-        return $this->brandID;
+        return $this->brand;
     }
 
-    public function setBrandID(?Brand $brandID): static
+    public function setBrand(?Brand $brand): static
     {
-        $this->brandID = $brandID;
+        $this->brand = $brand;
 
         return $this;
     }
 
-    public function getModelID(): ?Model
+    public function getModel(): ?Model
     {
-        return $this->modelID;
+        return $this->model;
     }
 
-    public function setModelID(?Model $modelID): static
+    public function setModel(?Model $model): static
     {
-        $this->modelID = $modelID;
+        $this->model = $model;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Request>
+     */
+    public function getRequests(): Collection
+    {
+        return $this->requests;
+    }
+
+    public function addRequest(Request $request): static
+    {
+        if (!$this->requests->contains($request)) {
+            $this->requests->add($request);
+            $request->setCar($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRequest(Request $request): static
+    {
+        if ($this->requests->removeElement($request)) {
+            // set the owning side to null (unless already changed)
+            if ($request->getCar() === $this) {
+                $request->setCar(null);
+            }
+        }
 
         return $this;
     }
